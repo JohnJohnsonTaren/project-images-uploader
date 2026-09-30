@@ -7,8 +7,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - images:/images
-      - logs:/logs
+      - ./images:/images
+      - ./logs:/logs
     networks:
       - image-network
     restart: unless-stopped
