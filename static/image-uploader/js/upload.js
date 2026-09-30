@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const handleAndStoreFiles = (files) => {
+    const handleAndStoreFiles = async (files) => {
         if (!files || files.length === 0) {
             return;
         }
@@ -41,31 +41,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         const MAX_SIZE_MB = 5;
         const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-        let filesAdded = false;
-        let lastFileName = '';
+        let lastUrl = '';
 
         for (const file of files) {
             if (!allowedTypes.includes(file.type) || file.size > MAX_SIZE_BYTES) {
                 continue;
             }
 
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const fileData = { name: file.name, url: event.target.result };
-                storedFiles.push(fileData);
-                localStorage.setItem('uploadedImages', JSON.stringify(storedFiles));
-                updateTabStyles();
-            };
-            reader.readAsDataURL(file);
-            filesAdded = true;
-            lastFileName = file.name;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (!response.ok) {
+                    alert(`${file.name}: ${result.error || 'upload failed'}`);
+                    continue;
+                }
+
+                // result.url — справжнє посилання від сервера, напр. /images/<uuid>.png
+                storedFiles.push({ name: file.name, url: result.url });
+                lastUrl = `${window.location.origin}${result.url}`;
+            } catch (error) {
+                alert(`${file.name}: network error`);
+            }
         }
 
-        if (filesAdded) {
+        localStorage.setItem('uploadedImages', JSON.stringify(storedFiles));
+        updateTabStyles();
+
+        if (lastUrl) {
             if (currentUploadInput) {
-                currentUploadInput.value = `https://sharefile.xyz/${lastFileName}`;
+                currentUploadInput.value = lastUrl;
             }
-            alert("Files selected successfully! Go to the 'Images' tab to view them.");
+            alert("Files uploaded successfully! Go to the 'Images' tab to view them.");
         }
     };
 
@@ -109,4 +119,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateTabStyles();
-}); 
+});

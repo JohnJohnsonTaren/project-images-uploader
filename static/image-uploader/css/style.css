@@ -249,6 +249,16 @@ body {
     border-bottom: none;
 }
 
+.file-col-url a {
+    color: #0060ff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.file-col-url a:hover {
+    text-decoration: underline;
+}
+
 /* List header */
 .file-list-header {
     color: #8a96b1;
